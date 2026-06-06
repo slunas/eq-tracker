@@ -243,72 +243,84 @@ if page == "📊 Krono Prices":
         st.caption(f"Based on {stats['total_sales']:,} Krono sales recorded")
         st.divider()
 
-        # ── Two column layout: chat left, chart right ──
-        col_chat, col_chart = st.columns([0.38, 0.62])
+        import psycopg2
+        try:
+            _url = st.secrets["DATABASE_URL"]
+        except:
+            _url = "postgresql://postgres.dbtghqkhjfhctxzqhvhu:dWbd6LL3ln1LawHf@aws-1-us-west-2.pooler.supabase.com:6543/postgres"
 
-        with col_chat:
-            st.markdown("<p style='color:#c8a84b;font-family:serif;font-size:1.4rem;font-weight:bold;margin-top:0;'>📜 Live Krono Sales</p>", unsafe_allow_html=True)
-            st.caption('Most recent 30 sales')
-            import psycopg2, os, streamlit as _st3
-            try:
-                _url = _st3.secrets["DATABASE_URL"]
-            except:
-                _url = "postgresql://postgres.dbtghqkhjfhctxzqhvhu:dWbd6LL3ln1LawHf@aws-1-us-west-2.pooler.supabase.com:6543/postgres"
-            with psycopg2.connect(_url) as _fcon:
-                with _fcon.cursor() as _fcur:
-                    _fcur.execute("""
-                        SELECT seller, price_pp, type, timestamp
+        def fetch_krono_feed(typ, limit=30):
+            with psycopg2.connect(_url) as c:
+                with c.cursor() as cur:
+                    cur.execute("""
+                        SELECT seller, price_pp, timestamp
                         FROM auctions
                         WHERE LOWER(item) = 'krono'
                         AND price_pp IS NOT NULL
-                        AND type = 'WTS'
+                        AND type = %s
                         ORDER BY timestamp DESC
-                        LIMIT 30
-                    """)
-                    feed_rows = _fcur.fetchall()
+                        LIMIT %s
+                    """, (typ, limit))
+                    return cur.fetchall()
 
-            if feed_rows:
-                chat_lines = []
-                for seller, price, typ, ts in feed_rows:
-                    time_str = pd.to_datetime(ts).strftime('%H:%M')
-                    action = 'WTS' if typ == 'WTS' else 'WTB'
-                    action_color = '#4caf50' if typ == 'WTS' else '#ef5350'
-                    price_str = f"{int(price):,}pp"
-                    line = (
-                        f"<div style='font-family:monospace;font-size:12px;padding:2px 0;border-bottom:1px solid #1a1a2a;'>"
-                        f"<span style='color:#666;'>[{time_str}]</span> "
-                        f"<span style='color:#ff9f43;font-weight:bold;'>{seller}</span>"
-                        f"<span style='color:#888;'> auctions, '</span>"
-                        f"<span style='color:{action_color};font-weight:bold;'>{action}</span>"
-                        f" <span style='color:#c8a84b;'>Krono</span>"
-                        f" <span style='color:#7ab8d8;font-weight:bold;'>{price_str}</span>"
-                        f"<span style='color:#888;'> PST'</span>"
-                        f"</div>"
-                    )
-                    chat_lines.append(line)
-                chat_html = (
-                    "<div id='krono-chat' style='background:#080c18;border:1px solid #c8a84b33;border-radius:6px;"
-                    "padding:10px;height:420px;overflow-y:auto;'>"
-                    + "".join(chat_lines) + "</div><script>var el=document.getElementById('krono-chat');if(el)el.scrollTop=el.scrollHeight;</script>"
+        def build_chat(rows, typ):
+            color = '#4caf50' if typ == 'WTS' else '#ef5350'
+            bg = '#050f05' if typ == 'WTS' else '#0f0505'
+            border_color = '#1a4a1a' if typ == 'WTS' else '#4a1a1a'
+            uid = typ.lower()
+            if not rows:
+                return f"<div style='background:{bg};border:1px solid {color}33;border-radius:6px;padding:10px;height:380px;color:#666;font-family:monospace;'>No {typ} listings yet.</div>"
+            lines = []
+            for seller, price, ts in rows:
+                time_str = pd.to_datetime(ts).strftime('%H:%M')
+                price_str = f"{int(price):,}pp"
+                lines.append(
+                    f"<div style='font-family:monospace;font-size:12px;padding:3px 0;border-bottom:1px solid {border_color};'>"
+                    f"<span style='color:#555;'>[{time_str}]</span> "
+                    f"<span style='color:#ff9f43;font-weight:bold;'>{seller}</span>"
+                    f"<span style='color:#666;'> auctions, '</span>"
+                    f"<span style='color:{color};font-weight:bold;'>{typ}</span>"
+                    f" <span style='color:#c8a84b;'>Krono</span>"
+                    f" <span style='color:#7ab8d8;font-weight:bold;'>{price_str}</span>"
+                    f"<span style='color:#666;'> PST'</span>"
+                    f"</div>"
                 )
-                st.markdown(chat_html, unsafe_allow_html=True)
-            else:
-                st.info("No Krono sales yet.")
+            return (
+                f"<div id='feed-{uid}' style='background:{bg};border:1px solid {color}44;"
+                f"border-radius:6px;padding:10px;height:380px;overflow-y:auto;'>"
+                + "".join(lines) +
+                f"</div><script>var e=document.getElementById('feed-{uid}');if(e)e.scrollTop=e.scrollHeight;</script>"
+            )
 
-        with col_chart:
-            rows = get_krono_history(days=days)
-            if rows:
-                df = pd.DataFrame(rows, columns=['Date', 'Avg', 'Low', 'High', 'Sales'])
-                df['Date'] = pd.to_datetime(df['Date'])
-                fig = go.Figure()
-                fig.add_trace(go.Scatter(x=df['Date'], y=df['High'], fill=None, mode='lines', line_color='rgba(255,100,100,0.3)', name='High'))
-                fig.add_trace(go.Scatter(x=df['Date'], y=df['Low'], fill='tonexty', mode='lines', line_color='rgba(100,200,100,0.3)', fillcolor='rgba(150,200,150,0.15)', name='Low'))
-                fig.add_trace(go.Scatter(x=df['Date'], y=df['Avg'], mode='lines+markers', line=dict(color='gold', width=2), name='Avg'))
-                fig.update_layout(title=f"Krono — Last {days} Days", xaxis_title="Date", yaxis_title="pp", hovermode='x unified', template='plotly_dark', margin=dict(t=40))
-                st.plotly_chart(fig, use_container_width=True)
-    
-            else:
-                st.info(f"No Krono data in the last {days} days.")
+        # ── WTS / WTB side by side ──
+        col_wts, col_wtb = st.columns(2)
+        with col_wts:
+            st.markdown("<p style='color:#4caf50;font-family:serif;font-size:1.1rem;font-weight:bold;margin:0 0 4px 0;'>🟢 WTS Krono</p>", unsafe_allow_html=True)
+            st.caption('Most recent 30 sellers')
+            wts_rows = fetch_krono_feed('WTS')
+            st.markdown(build_chat(wts_rows, 'WTS'), unsafe_allow_html=True)
+
+        with col_wtb:
+            st.markdown("<p style='color:#ef5350;font-family:serif;font-size:1.1rem;font-weight:bold;margin:0 0 4px 0;'>🔴 WTB Krono</p>", unsafe_allow_html=True)
+            st.caption('Most recent 30 buyers')
+            wtb_rows = fetch_krono_feed('WTB')
+            st.markdown(build_chat(wtb_rows, 'WTB'), unsafe_allow_html=True)
+
+        st.divider()
+
+        # ── Price chart below ──
+        rows = get_krono_history(days=days)
+        if rows:
+            df = pd.DataFrame(rows, columns=['Date', 'Avg', 'Low', 'High', 'Sales'])
+            df['Date'] = pd.to_datetime(df['Date'])
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=df['Date'], y=df['High'], fill=None, mode='lines', line_color='rgba(255,100,100,0.3)', name='High'))
+            fig.add_trace(go.Scatter(x=df['Date'], y=df['Low'], fill='tonexty', mode='lines', line_color='rgba(100,200,100,0.3)', fillcolor='rgba(150,200,150,0.15)', name='Low'))
+            fig.add_trace(go.Scatter(x=df['Date'], y=df['Avg'], mode='lines+markers', line=dict(color='gold', width=2), name='Avg'))
+            fig.update_layout(title=f"Krono Price — Last {days} Days", xaxis_title="Date", yaxis_title="pp", hovermode='x unified', template='plotly_dark')
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info(f"No Krono data in the last {days} days.")
 
 
 # ════════════════════════════════════════════
