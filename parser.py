@@ -63,13 +63,21 @@ def parse_auction_line(line):
             continue
 
         # Pass 1: Krono sold for pp
+        # Handles: "Krono 8000pp", "2 Krono 16000pp" (divides by qty), "8000pp Krono"
         krono_alias_pattern = '|'.join(re.escape(a) for a in KRONO_ALIASES)
         m = re.search(
-            rf'(?:(\d+)\s*pp\s+(?:{krono_alias_pattern})|(?:{krono_alias_pattern})\s+(\d[\d,]*)\s*pp)',
+            rf'(?:(\d+)\s*pp\s+(?:{krono_alias_pattern})'
+            rf'|(\d+)\s+(?:{krono_alias_pattern})\s+(\d[\d,]*)\s*pp'
+            rf'|(?:{krono_alias_pattern})\s+(\d[\d,]*)\s*pp)',
             seg, re.IGNORECASE
         )
         if m:
-            price = int((m.group(1) or m.group(2)).replace(',', ''))
+            if m.group(2) and m.group(3):
+                qty = int(m.group(2))
+                total = int(m.group(3).replace(',', ''))
+                price = total // qty
+            else:
+                price = int((m.group(1) or m.group(4)).replace(',', ''))
             results.append({'type': current_type, 'item': 'Krono', 'price_pp': price,
                            'price_krono': None, 'seller': seller, 'raw': msg})
             seg = seg[:m.start()] + ' ' + seg[m.end():]
