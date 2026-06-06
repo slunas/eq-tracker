@@ -174,7 +174,7 @@ except Exception as e:
     st.stop()
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
-st.sidebar.markdown("<h1 style="color:#c8a84b;font-family:serif;">⚔️ Frostreaver<br>Tunnel</h1>", unsafe_allow_html=True)
+st.sidebar.markdown('<h1 style="color:#c8a84b;font-family:serif;">⚔️ Frostreaver<br>Tunnel</h1>', unsafe_allow_html=True)
 page = st.sidebar.radio("Navigate", ["📊 Krono Prices", "🔍 Item Lookup", "📜 Recent Auctions"])
 days = st.sidebar.slider("History (days)", 7, 90, 30)
 st.sidebar.markdown("---")
