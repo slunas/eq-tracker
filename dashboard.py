@@ -255,6 +255,65 @@ if page == "📊 Krono Prices":
             st.plotly_chart(fig2, use_container_width=True)
         else:
             st.info(f"No Krono data in the last {days} days.")
+        # ── Live Krono Chat Feed ──────────────────────────────────────────
+        st.divider()
+        st.markdown("<h3 style='color:#c8a84b;font-family:serif;'>📜 Live Krono Sales</h3>", unsafe_allow_html=True)
+        st.caption('Auto-refreshes every 30 seconds')
+
+        # Fetch last 30 Krono sales
+        feed_con = get_con()
+        feed_cur = feed_con.cursor()
+        feed_cur.execute("""
+            SELECT seller, price_pp, type, timestamp
+            FROM auctions
+            WHERE LOWER(item) = 'krono'
+            AND price_pp IS NOT NULL
+            ORDER BY timestamp DESC
+            LIMIT 30
+        """)
+        feed_rows = feed_cur.fetchall()
+        release_con(feed_con)
+
+        if feed_rows:
+            chat_lines = []
+            for seller, price, typ, ts in feed_rows:
+                time_str = pd.to_datetime(ts).strftime('%H:%M')
+                action = 'WTS' if typ == 'WTS' else 'WTB'
+                action_color = '#4caf50' if typ == 'WTS' else '#ef5350'
+                price_str = f"{int(price):,}pp"
+                line = (
+                    f"<div style='font-family:monospace;font-size:13px;padding:2px 0;'>"
+                    f"<span style='color:#888;'>[{time_str}]</span> "
+                    f"<span style='color:#ff9f43;font-weight:bold;'>{seller}</span>"
+                    f"<span style='color:#aaa;'> auctions, </span>"
+                    f"<span style='color:#e0d5b0;'>'</span>"
+                    f"<span style='color:{action_color};font-weight:bold;'>{action}</span>"
+                    f"<span style='color:#aaa;'> </span>"
+                    f"<span style='color:#c8a84b;'>Krono</span>"
+                    f"<span style='color:#aaa;'> </span>"
+                    f"<span style='color:#7ab8d8;font-weight:bold;'>{price_str}</span>"
+                    f"<span style='color:#aaa;'> PST</span>"
+                    f"<span style='color:#e0d5b0;'>'</span>"
+                    f"</div>"
+                )
+                chat_lines.append(line)
+
+            chat_html = (
+                "<div style='background:#0a0e18;border:1px solid #c8a84b33;border-radius:6px;"
+                "padding:12px;max-height:350px;overflow-y:auto;'>"
+                + "".join(chat_lines) +
+                "</div>"
+            )
+            st.markdown(chat_html, unsafe_allow_html=True)
+        else:
+            st.info("No Krono sales yet.")
+
+        # Auto-refresh every 30 seconds
+        import time as _time
+        st.markdown(
+            "<script>setTimeout(function(){window.location.reload()}, 30000);</script>",
+            unsafe_allow_html=True
+        )
 
 
 # ════════════════════════════════════════════
