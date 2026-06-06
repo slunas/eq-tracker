@@ -150,6 +150,11 @@ def watch_log(log_path, verbose=True):
             entries = parse_auction_line(line)
             for entry in entries:
                 try:
+                    # Filter out bad Krono prices
+                    if entry['item'] == 'Krono' and entry['price_pp']:
+                        if not is_valid_krono_price(entry['price_pp']):
+                            print(f"  ⚠️ Rejected Krono price {entry['price_pp']:,}pp (too far from avg)")
+                            continue
                     save_auction(entry)
                     if verbose:
                         kron_str = f" ({entry['price_krono']} Krono)" if entry['price_krono'] else ""
@@ -157,3 +162,19 @@ def watch_log(log_path, verbose=True):
                         print(f"[{entry['type']}] {entry['item']} — {pp_str}{kron_str}  (seller: {entry['seller']})")
                 except Exception as e:
                     print(f"  ⚠️ Failed to save: {e}")
+
+
+def is_valid_krono_price(price_pp, con=None):
+    """Return True if price is within 50% of the rolling average."""
+    from db import get_krono_current, get_con, release_con
+    owned = con is None
+    if owned:
+        con = get_con()
+    try:
+        avg = get_krono_current(con)
+        if avg is None:
+            return True  # no data yet, accept anything
+        return avg * 0.5 <= price_pp <= avg * 1.5
+    finally:
+        if owned:
+            release_con(con)
