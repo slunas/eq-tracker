@@ -247,18 +247,22 @@ if page == "📊 Krono Prices":
         with col_chat:
             st.markdown("<p style='color:#c8a84b;font-family:serif;font-size:1.4rem;font-weight:bold;margin-top:0;'>📜 Live Krono Sales</p>", unsafe_allow_html=True)
             st.caption('Most recent 30 sales')
-            _fcon = get_con()
-            _fcur = _fcon.cursor()
-            _fcur.execute("""
-                SELECT seller, price_pp, type, timestamp
-                FROM auctions
-                WHERE LOWER(item) = 'krono'
-                AND price_pp IS NOT NULL
-                ORDER BY timestamp DESC
-                LIMIT 30
-            """)
-            feed_rows = _fcur.fetchall()
-            release_con(_fcon)
+            import psycopg2, os, streamlit as _st3
+            try:
+                _url = _st3.secrets["DATABASE_URL"]
+            except:
+                _url = "postgresql://postgres.dbtghqkhjfhctxzqhvhu:dWbd6LL3ln1LawHf@aws-1-us-west-2.pooler.supabase.com:6543/postgres"
+            with psycopg2.connect(_url) as _fcon:
+                with _fcon.cursor() as _fcur:
+                    _fcur.execute("""
+                        SELECT seller, price_pp, type, timestamp
+                        FROM auctions
+                        WHERE LOWER(item) = 'krono'
+                        AND price_pp IS NOT NULL
+                        ORDER BY timestamp DESC
+                        LIMIT 30
+                    """)
+                    feed_rows = _fcur.fetchall()
 
             if feed_rows:
                 chat_lines = []
