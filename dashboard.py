@@ -278,7 +278,7 @@ elif page == "🔍 Item Lookup":
                     if listings:
                         ldf = pd.DataFrame(listings, columns=['Seller', 'Price (pp) / Krono Avg at Time', 'Price (Krono)', 'Type', 'Time', 'Raw Line'])
                         ldf['Time'] = pd.to_datetime(ldf['Time']).dt.strftime('%Y-%m-%d %H:%M')
-                        ldf['Price (pp)'] = ldf['Price (pp)'].apply(lambda x: f"{int(x):,}pp" if pd.notna(x) else "—")
+                        
                         ldf['Price (Krono)'] = ldf['Price (Krono)'].apply(lambda x: f"{int(x)} 🪙" if pd.notna(x) else "—")
                         st.caption('💡 pp for Krono listings = Krono avg at time of sale')
                         ldf['Price (pp) / Krono Avg at Time'] = ldf['Price (pp) / Krono Avg at Time'].apply(lambda x: f"{int(x):,}pp" if pd.notna(x) else "—")
