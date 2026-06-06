@@ -68,6 +68,7 @@ Reads from Supabase. Run with: streamlit run dashboard.py
 """
 
 import streamlit as st
+from streamlit_autorefresh import st_autorefresh
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
@@ -218,6 +219,7 @@ def item_link(name):
 # ════════════════════════════════════════════
 
 if page == "📊 Krono Prices":
+    st_autorefresh(interval=15000, key="krono_refresh")
     col1, col2 = st.columns([0.08, 0.92])
     with col1:
         st.image("https://raw.githubusercontent.com/slunas/eq-tracker/main/krono.png", width=40)
@@ -259,6 +261,7 @@ if page == "📊 Krono Prices":
                         FROM auctions
                         WHERE LOWER(item) = 'krono'
                         AND price_pp IS NOT NULL
+                        AND type = 'WTS'
                         ORDER BY timestamp DESC
                         LIMIT 30
                     """)
@@ -284,9 +287,9 @@ if page == "📊 Krono Prices":
                     )
                     chat_lines.append(line)
                 chat_html = (
-                    "<div style='background:#080c18;border:1px solid #c8a84b33;border-radius:6px;"
+                    "<div id='krono-chat' style='background:#080c18;border:1px solid #c8a84b33;border-radius:6px;"
                     "padding:10px;height:420px;overflow-y:auto;'>"
-                    + "".join(chat_lines) + "</div>"
+                    + "".join(chat_lines) + "</div><script>var el=document.getElementById('krono-chat');if(el)el.scrollTop=el.scrollHeight;</script>"
                 )
                 st.markdown(chat_html, unsafe_allow_html=True)
             else:
@@ -303,9 +306,7 @@ if page == "📊 Krono Prices":
                 fig.add_trace(go.Scatter(x=df['Date'], y=df['Avg'], mode='lines+markers', line=dict(color='gold', width=2), name='Avg'))
                 fig.update_layout(title=f"Krono — Last {days} Days", xaxis_title="Date", yaxis_title="pp", hovermode='x unified', template='plotly_dark', margin=dict(t=40))
                 st.plotly_chart(fig, use_container_width=True)
-                fig2 = px.bar(df, x='Date', y='Sales', title='Daily Sale Count', template='plotly_dark', color_discrete_sequence=['gold'])
-                fig2.update_layout(margin=dict(t=40))
-                st.plotly_chart(fig2, use_container_width=True)
+    
             else:
                 st.info(f"No Krono data in the last {days} days.")
 
