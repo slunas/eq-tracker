@@ -7,7 +7,7 @@ import re
 import time
 from pathlib import Path
 
-KRONO_ALIASES = ['krono', 'kronos', 'kron']  # removed 'kr' — too ambiguous
+KRONO_ALIASES = ['krono', 'kronos', 'kron']
 NOISE_WORDS = {'pst', 'obo', 'or', 'and', 'wts', 'wtb', 'wtt', 'free', 'cheap', 'rare',
                'pm', 'msg', 'ea', 'each', 'per', 'stack', 'tell', 'me', 'offers',
                'selling', 'buying', 'paying', 'buying', 'cheap', 'cheap'}
@@ -93,7 +93,7 @@ def extract_krono_price(seg):
 
     # Pattern: [qty] krono [xqty] <price>[pp/p/k]
     m = re.search(
-        rf'(?:(\d+)\s+)?(?:{alias_pat})s?\s*(?:x\s*(\d+)\s+)?(\d[\d.,]*(?:[kK](?:pp?)?|pp?)?)(?=\s|$|[,\|/])',
+        rf'(?:(\d+)\s+)?(?:{alias_pat})s?\s*(?:x\s*(\d+)\s+)?(\d[\d.,]*(?:[kK](?:pp?)?|pp?)?)(?=\s|$|[,|/])',
         seg, re.IGNORECASE
     )
     if m:
@@ -133,38 +133,40 @@ def extract_items(seg, seller, msg_type):
     seg = re.sub(r'[/|\\□\-]{2,}', ',', seg)
     seg = re.sub(r'\s{2,}', ' ', seg)
 
-    # Pattern: item name followed by price
-    # Price must have pp, p, or k suffix OR be preceded by item name clearly
-    pattern = re.compile(
-        r'([A-Za-z][A-Za-z0-9\s\'\-\+\:\,]{2,60}?)'   # item name
-        r'\s+'
-        r'(\d[\d,]*(?:\.\d+)?[kK]?(?:pp?))'             # price with pp/p/k suffix
-        r'(?=\s*(?:each|ea|obo|pst|$|,|\|)|\s+[A-Z])',  # followed by end/separator/new item
+    # Pattern A: item priced in pp/k  e.g. "Staff 500pp" "Fungi 2kpp"
+    pp_pat = re.compile(
+        r"([A-Za-z][A-Za-z0-9\s'\-\+\:,]{2,60}?)"
+        r"\s+"
+        r"(\d[\d,]*(?:\.\d+)?[kK]?(?:pp?))"
+        r"(?=\s*(?:each|ea|obo|pst|$|,|\|)|\s+[A-Z])",
         re.IGNORECASE
     )
-
-    for m in pattern.finditer(seg):
+    for m in pp_pat.finditer(seg):
         name = clean_item_name(m.group(1))
-        if not name:
-            continue
-        # Skip if name is a noise word or krono
-        if name.lower() in NOISE_WORDS or is_krono(name):
-            continue
-        # Skip very short names (likely false positives)
-        if len(name) < 3:
+        if not name or len(name) < 3 or name.lower() in NOISE_WORDS or is_krono(name):
             continue
         price = to_pp(m.group(2))
         if not price or price <= 0 or price > 10_000_000:
             continue
+        results.append({'type': msg_type, 'item': name, 'price_pp': price,
+                        'price_krono': None, 'seller': seller, 'raw': seg})
 
-        results.append({
-            'type': msg_type,
-            'item': name,
-            'price_pp': price,
-            'price_krono': None,
-            'seller': seller,
-            'raw': seg
-        })
+    # Pattern B: item priced in kr/krono  e.g. "Staff 9kr" "Fungi 2 krono"
+    kr_pat = re.compile(
+        r"([A-Za-z][A-Za-z0-9\s'\-\+\:,]{2,60}?)"
+        r"\s+(\d+)\s*(?:krono|kronos|kron|kr)s?"
+        r"(?=\s*(?:each|ea|obo|pst|,|$)|\s+[A-Z]|$)",
+        re.IGNORECASE
+    )
+    for m in kr_pat.finditer(seg):
+        name = clean_item_name(m.group(1))
+        if not name or len(name) < 3 or name.lower() in NOISE_WORDS or is_krono(name):
+            continue
+        kr_count = int(m.group(2))
+        if kr_count < 1 or kr_count > 100:
+            continue
+        results.append({'type': msg_type, 'item': name, 'price_pp': None,
+                        'price_krono': kr_count, 'seller': seller, 'raw': seg})
 
     return results
 
@@ -198,17 +200,22 @@ def parse_auction_line(line):
         if current_type is None:
             continue
 
-        # Try Krono first
-        krono_price, span = extract_krono_price(seg)
+        # Try Krono first (only on WTS lines for price tracking)
+        krono_price, span = extract_krono_price(seg) if current_type == "WTS" else (None, None)
         if krono_price:
-            results.append({
-                'type': current_type,
-                'item': 'Krono',
-                'price_pp': krono_price,
-                'price_krono': None,
-                'seller': seller,
-                'raw': msg
-            })
+            # Sanity check: if a pp price appears AFTER the kr match, this is likely
+            # a trade offer like "fungus tunic 1kr 2000p" not a Krono sale
+            after_match = seg[span[1]:] if span else ''
+            has_pp_after = bool(re.search(r'\d+\s*(?:pp?|[kK]pp?)', after_match, re.IGNORECASE))
+            if not has_pp_after:
+                results.append({
+                    'type': current_type,
+                    'item': 'Krono',
+                    'price_pp': krono_price,
+                    'price_krono': None,
+                    'seller': seller,
+                    'raw': msg
+                })
             # Remove matched krono from seg so it doesn't confuse item parser
             seg = seg[:span[0]] + ' ' + seg[span[1]:]
 
