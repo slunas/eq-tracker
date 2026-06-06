@@ -207,6 +207,12 @@ def make_html_table(rows, columns):
     html += "</tbody></table>"
     return html
 
+
+def item_link(name):
+    slug = name.lower().replace(' ', '-').replace(':', '').replace("'", '').replace(',', '')
+    url = f'https://eqprogression.com/item-{slug}/'
+    return f'<a href="{url}" target="_blank" style="color:#7ab8d8;text-decoration:none;">{name}</a>'
+
 # ════════════════════════════════════════════
 # PAGE 1 — KRONO
 # ════════════════════════════════════════════
@@ -264,10 +270,11 @@ elif page == "🔍 Item Lookup":
         if rows:
             df = pd.DataFrame(rows, columns=['Item', 'Sales', 'Avg Price (pp)', 'Low (pp)', 'High (pp)', 'Last Seen'])
             df['Last Seen'] = pd.to_datetime(df['Last Seen']).dt.strftime('%Y-%m-%d %H:%M')
+            df['Item'] = df['Item'].apply(item_link)
             df['Avg Price (pp)'] = df['Avg Price (pp)'].apply(lambda x: f"{int(x):,}" if x else "—")
             df['Low (pp)'] = df['Low (pp)'].apply(lambda x: f"{int(x):,}" if x else "—")
             df['High (pp)'] = df['High (pp)'].apply(lambda x: f"{int(x):,}" if x else "—")
-            st.dataframe(df, use_container_width=True, hide_index=True)
+            st.markdown(make_html_table(df.values.tolist(), df.columns.tolist()), unsafe_allow_html=True)
 
             selected = st.selectbox("View details for:", [r[0] for r in rows])
             if selected:
@@ -283,7 +290,7 @@ elif page == "🔍 Item Lookup":
                             time_str = pd.to_datetime(ts).strftime('%Y-%m-%d %H:%M')
                             pp_str = f"{int(price_pp):,}pp" if price_pp is not None else "—"
                             kr_str = f'<img src="https://raw.githubusercontent.com/slunas/eq-tracker/main/krono.png" style="width:18px;height:18px;vertical-align:middle;"> {int(price_kr)}' if price_kr is not None else '—'
-                            trows.append([typ, seller, pp_str, kr_str, time_str])
+                            trows.append([typ, f'<a href="https://eqprogression.com/item-{selected.lower().replace(" ", "-").replace(":", "").replace("'", "")}/" target="_blank" style="color:#7ab8d8;text-decoration:none;">{selected}</a>', pp_str, kr_str, time_str])
                         st.markdown(make_html_table(trows, ['Type','Seller','Price (pp)','Price (Krono)','Time']), unsafe_allow_html=True)
                         with st.expander("Show raw auction lines"):
                             for raw in set(r[5] for r in listings[:20]):
@@ -330,6 +337,7 @@ elif page == "📜 Recent Auctions":
             df = df[df['Type'] == 'WTS']
         elif type_filter == "WTB only":
             df = df[df['Type'] == 'WTB']
+        df['Item'] = df['Item'].apply(lambda n: item_link(str(n)))
         trows = df[['Type','Item','Price (pp)','Price (Krono)','Seller','Time']].values.tolist()
         st.markdown(make_html_table(trows, ['Type','Item','Price (pp)','Price (Krono)','Seller','Time']), unsafe_allow_html=True)
     else:
