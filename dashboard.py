@@ -245,15 +245,9 @@ if page == "📊 Krono Prices":
         col_chat, col_chart = st.columns([0.38, 0.62])
 
         with col_chat:
-            st.markdown("<h3 style='color:#c8a84b;font-family:serif;margin-top:0;'>📜 Live Krono Sales</h3>", unsafe_allow_html=True)
+            st.markdown("<p style='color:#c8a84b;font-family:serif;font-size:1.4rem;font-weight:bold;margin-top:0;'>📜 Live Krono Sales</p>", unsafe_allow_html=True)
             st.caption('Most recent 30 sales')
-            import psycopg2, os
-            try:
-                import streamlit as _st2
-                _db_url = _st2.secrets["DATABASE_URL"]
-            except:
-                _db_url = os.environ.get("DATABASE_URL", "")
-            _fcon = psycopg2.connect(_db_url)
+            _fcon = get_con()
             _fcur = _fcon.cursor()
             _fcur.execute("""
                 SELECT seller, price_pp, type, timestamp
@@ -264,7 +258,7 @@ if page == "📊 Krono Prices":
                 LIMIT 30
             """)
             feed_rows = _fcur.fetchall()
-            _fcon.close()
+            release_con(_fcon)
 
             if feed_rows:
                 chat_lines = []
