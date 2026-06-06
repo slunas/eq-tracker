@@ -42,7 +42,7 @@ def is_krono(word):
 def parse_auction_line(line):
     results = []
 
-    seller_match = re.search(r'\] (\w+) auction', line, re.IGNORECASE)
+    seller_match = re.search(r'\] ([A-Za-z][A-Za-z0-9]+) auctions,', line, re.IGNORECASE)
     seller = seller_match.group(1) if seller_match else None
 
     quote_match = re.search(r"'(.+?)'", line)
@@ -150,8 +150,11 @@ def watch_log(log_path, verbose=True):
             entries = parse_auction_line(line)
             for entry in entries:
                 try:
-                    # Filter out bad Krono prices
+                    # Filter out bad Krono prices - hard cap + rolling avg check
                     if entry['item'] == 'Krono' and entry['price_pp']:
+                        if entry['price_pp'] > 20000 or entry['price_pp'] < 1000:
+                            print(f"  ⚠️ Rejected Krono price {entry['price_pp']:,}pp (outside hard limits)")
+                            continue
                         if not is_valid_krono_price(entry['price_pp']):
                             print(f"  ⚠️ Rejected Krono price {entry['price_pp']:,}pp (too far from avg)")
                             continue
