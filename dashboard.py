@@ -209,8 +209,8 @@ def make_html_table(rows, columns):
 
 
 def item_link(name):
-    slug = name.lower().replace(' ', '-').replace(':', '').replace("'", '').replace(',', '')
-    url = f'https://eqprogression.com/item-{slug}/'
+    slug = name.replace(' ', '+')
+    url = f'http://lucy.allakhazam.com/item.html?name={slug}&source=Live'
     return f'<a href="{url}" target="_blank" style="color:#7ab8d8;text-decoration:none;">{name}</a>'
 
 # ════════════════════════════════════════════
@@ -290,7 +290,7 @@ elif page == "🔍 Item Lookup":
                             time_str = pd.to_datetime(ts).strftime('%Y-%m-%d %H:%M')
                             pp_str = f"{int(price_pp):,}pp" if price_pp is not None else "—"
                             kr_str = f'<img src="https://raw.githubusercontent.com/slunas/eq-tracker/main/krono.png" style="width:18px;height:18px;vertical-align:middle;"> {int(price_kr)}' if price_kr is not None else '—'
-                            trows.append([typ, f'<a href="https://eqprogression.com/item-{selected.lower().replace(" ", "-").replace(":", "").replace("'", "")}/" target="_blank" style="color:#7ab8d8;text-decoration:none;">{selected}</a>', pp_str, kr_str, time_str])
+                            trows.append([typ, f'<a href="http://lucy.allakhazam.com/item.html?name={selected.replace(" ", "+")}&source=Live" target="_blank" style="color:#7ab8d8;text-decoration:none;">{selected}</a>', pp_str, kr_str, time_str])
                         st.markdown(make_html_table(trows, ['Type','Seller','Price (pp)','Price (Krono)','Time']), unsafe_allow_html=True)
                         with st.expander("Show raw auction lines"):
                             for raw in set(r[5] for r in listings[:20]):
