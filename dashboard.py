@@ -279,10 +279,10 @@ elif page == "🔍 Item Lookup":
                         ldf = pd.DataFrame(listings, columns=['Seller', 'Price (pp) / Krono Avg at Time', 'Price (Krono)', 'Type', 'Time', 'Raw Line'])
                         ldf['Time'] = pd.to_datetime(ldf['Time']).dt.strftime('%Y-%m-%d %H:%M')
                         
-                        ldf['Price (Krono)'] = ldf['Price (Krono)'].apply(lambda x: f"{int(x)} 🪙" if pd.notna(x) else "—")
+                        ldf['Price (Krono)'] = ldf['Price (Krono)'].apply(lambda x: f"{int(x)} kr" if pd.notna(x) else "—")
                         st.caption('💡 pp for Krono listings = Krono avg at time of sale')
                         ldf['Price (pp) / Krono Avg at Time'] = ldf['Price (pp) / Krono Avg at Time'].apply(lambda x: f"{int(x):,}pp" if pd.notna(x) else "—")
-                        ldf['Price (Krono)'] = ldf['Price (Krono)'].apply(lambda x: f"{int(x)} 🪙" if pd.notna(x) else "—")
+                        ldf['Price (Krono)'] = ldf['Price (Krono)'].apply(lambda x: f"{int(x)} kr" if pd.notna(x) else "—")
                         trows = ldf[['Type','Seller','Price (pp) / Krono Avg at Time','Price (Krono)','Time']].values.tolist()
                         st.markdown(make_html_table(trows, ['Type','Seller','Price (pp)','Price (Krono)','Time']), unsafe_allow_html=True)
                         with st.expander("Show raw auction lines"):
