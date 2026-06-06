@@ -181,6 +181,32 @@ st.sidebar.markdown("---")
 st.sidebar.caption("Data updates live as the parser runs.")
 
 
+
+def make_html_table(rows, columns):
+    css = (
+        "<style>"
+        ".eq-table{width:100%;border-collapse:collapse;font-family:Georgia,serif;font-size:13px;}"
+        ".eq-table th{background:#1a1a2a;color:#c8a84b;padding:8px 12px;text-align:left;border-bottom:1px solid #c8a84b44;}"
+        ".eq-table td{padding:7px 12px;border-bottom:1px solid #1e1e2e;color:#d0c8a8;}"
+        ".eq-table tr:hover td{background:#1c1c2c;}"
+        ".wts{background:#1a3a1a;color:#4caf50;padding:2px 8px;border-radius:4px;font-weight:bold;font-size:12px;}"
+        ".wtb{background:#3a1a1a;color:#ef5350;padding:2px 8px;border-radius:4px;font-weight:bold;font-size:12px;}"
+        "</style>"
+    )
+    header = "".join(f"<th>{c}</th>" for c in columns)
+    html = css + f'<table class="eq-table"><thead><tr>{header}</tr></thead><tbody>'
+    for row in rows:
+        cells = ""
+        for i, val in enumerate(row):
+            if columns[i] == "Type":
+                cls = "wts" if str(val) == "WTS" else "wtb"
+                cells += f'<td><span class="{cls}">{val}</span></td>'
+            else:
+                cells += f"<td>{val}</td>"
+        html += f"<tr>{cells}</tr>"
+    html += "</tbody></table>"
+    return html
+
 # ════════════════════════════════════════════
 # PAGE 1 — KRONO
 # ════════════════════════════════════════════
@@ -250,11 +276,15 @@ elif page == "🔍 Item Lookup":
                 with tab1:
                     listings = get_item_listings(selected)
                     if listings:
-                        ldf = pd.DataFrame(listings, columns=['Seller', 'Price (pp)', 'Price (Krono)', 'Type', 'Time', 'Raw Line'])
+                        ldf = pd.DataFrame(listings, columns=['Seller', 'Price (pp) / Krono Avg at Time', 'Price (Krono)', 'Type', 'Time', 'Raw Line'])
                         ldf['Time'] = pd.to_datetime(ldf['Time']).dt.strftime('%Y-%m-%d %H:%M')
                         ldf['Price (pp)'] = ldf['Price (pp)'].apply(lambda x: f"{int(x):,}pp" if pd.notna(x) else "—")
                         ldf['Price (Krono)'] = ldf['Price (Krono)'].apply(lambda x: f"{int(x)} 🪙" if pd.notna(x) else "—")
-                        st.dataframe(ldf[['Seller', 'Price (pp)', 'Price (Krono)', 'Type', 'Time']], use_container_width=True, hide_index=True)
+                        st.caption('💡 pp for Krono listings = Krono avg at time of sale')
+                        ldf['Price (pp) / Krono Avg at Time'] = ldf['Price (pp) / Krono Avg at Time'].apply(lambda x: f"{int(x):,}pp" if pd.notna(x) else "—")
+                        ldf['Price (Krono)'] = ldf['Price (Krono)'].apply(lambda x: f"{int(x)} 🪙" if pd.notna(x) else "—")
+                        trows = ldf[['Type','Seller','Price (pp) / Krono Avg at Time','Price (Krono)','Time']].values.tolist()
+                        st.markdown(make_html_table(trows, ['Type','Seller','Price (pp)','Price (Krono)','Time']), unsafe_allow_html=True)
                         with st.expander("Show raw auction lines"):
                             for raw in set(r[5] for r in listings[:20]):
                                 st.caption(raw)
@@ -300,6 +330,7 @@ elif page == "📜 Recent Auctions":
             df = df[df['Type'] == 'WTS']
         elif type_filter == "WTB only":
             df = df[df['Type'] == 'WTB']
-        st.dataframe(df, use_container_width=True, hide_index=True)
+        trows = df[['Type','Item','Price (pp)','Price (Krono)','Seller','Time']].values.tolist()
+        st.markdown(make_html_table(trows, ['Type','Item','Price (pp)','Price (Krono)','Seller','Time']), unsafe_allow_html=True)
     else:
         st.info("No auctions yet. Run the parser while playing!")
