@@ -1,3 +1,67 @@
+
+BANNER = """
+<svg width="100%" viewBox="0 0 680 160" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>Frostreaver EC Tunnel Tracker banner</title>
+<defs>
+  <linearGradient id="fade" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#070c18" stop-opacity="0"/>
+    <stop offset="100%" stop-color="#070c18" stop-opacity="0.6"/>
+  </linearGradient>
+  <linearGradient id="textbg" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#040e22" stop-opacity="0.96"/>
+    <stop offset="100%" stop-color="#071428" stop-opacity="0.96"/>
+  </linearGradient>
+</defs>
+<style>
+  .ban-bg{fill:#070c18}.mtn-dark{fill:#0b1220}.mtn-mid{fill:#0e1a2e}.mtn-light{fill:#12223d}
+  .snow{fill:#d0e8ff;opacity:0.9}.star{fill:#6090c0}
+  .title{font-family:Georgia,serif;fill:#f0d060;font-size:28px;font-weight:bold;letter-spacing:1px}
+  .sub{font-family:Georgia,serif;fill:#80aece;font-size:11px;letter-spacing:3px}
+  .gold-border{fill:none;stroke:#c8a84b;stroke-width:1.5}
+  .blue-border{fill:none;stroke:#1e3a5a;stroke-width:0.8}
+  .icicle{fill:#7ab0d8;opacity:0.85}
+</style>
+<rect class="ban-bg" width="680" height="160" rx="6"/>
+<polygon class="mtn-dark" points="0,160 70,45 140,160"/>
+<polygon class="mtn-mid" points="30,160 110,30 190,160"/>
+<polygon class="mtn-light" points="90,160 170,50 250,160"/>
+<polygon class="mtn-dark" points="150,160 210,65 270,160"/>
+<polygon class="mtn-mid" points="410,160 470,65 530,160"/>
+<polygon class="mtn-light" points="430,160 510,45 590,160"/>
+<polygon class="mtn-dark" points="490,160 570,30 650,160"/>
+<polygon class="mtn-mid" points="560,160 640,50 680,160"/>
+<polygon class="mtn-dark" points="620,160 680,40 680,160"/>
+<polygon class="snow" points="110,32 98,58 122,58"/>
+<polygon class="snow" points="70,47 60,68 80,68"/>
+<polygon class="snow" points="170,52 160,72 180,72"/>
+<polygon class="snow" points="210,67 202,84 218,84"/>
+<polygon class="snow" points="510,47 500,68 520,68"/>
+<polygon class="snow" points="570,32 558,58 582,58"/>
+<polygon class="snow" points="640,52 630,72 650,72"/>
+<circle class="star" cx="20" cy="15" r="1"/><circle class="star" cx="55" cy="8" r="1.3"/>
+<circle class="star" cx="130" cy="14" r="0.9"/><circle class="star" cx="195" cy="7" r="1.1"/>
+<circle class="star" cx="310" cy="11" r="1"/><circle class="star" cx="370" cy="7" r="1.3"/>
+<circle class="star" cx="485" cy="10" r="1.1"/><circle class="star" cx="545" cy="6" r="0.8"/>
+<circle class="star" cx="655" cy="9" r="1.2"/>
+<rect x="0" y="0" width="680" height="160" rx="6" fill="url(#fade)"/>
+<rect x="100" y="38" width="480" height="88" rx="4" fill="url(#textbg)" stroke="#1e3a6a" stroke-width="0.8"/>
+<rect x="104" y="42" width="472" height="80" rx="3" fill="none" stroke="#c8a84b44" stroke-width="0.6"/>
+<polygon class="icicle" points="115,38 112,52 118,52"/><polygon class="icicle" points="127,38 124,46 130,46"/>
+<polygon class="icicle" points="139,38 136,56 142,56"/><polygon class="icicle" points="151,38 148,44 154,44"/>
+<polygon class="icicle" points="529,38 526,50 532,50"/><polygon class="icicle" points="541,38 538,54 544,54"/>
+<polygon class="icicle" points="553,38 550,44 556,44"/><polygon class="icicle" points="565,38 562,52 568,52"/>
+<text font-family="Georgia,serif" font-size="28" font-weight="bold" fill="#000d24" x="342" y="88" text-anchor="middle" letter-spacing="1">Frostreaver EC Tunnel Tracker</text>
+<text class="title" x="340" y="86" text-anchor="middle">Frostreaver EC Tunnel Tracker</text>
+<line x1="160" y1="96" x2="220" y2="96" stroke="#c8a84b55" stroke-width="0.6"/>
+<line x1="460" y1="96" x2="520" y2="96" stroke="#c8a84b55" stroke-width="0.6"/>
+<text font-family="Georgia,serif" font-size="11" fill="#000d24" x="342" y="110" text-anchor="middle" letter-spacing="3">REAL-TIME AUCTION PRICES · FROSTREAVER SERVER</text>
+<text class="sub" x="340" y="108" text-anchor="middle">REAL-TIME AUCTION PRICES · FROSTREAVER SERVER</text>
+<rect class="gold-border" x="4" y="4" width="672" height="152" rx="5"/>
+<rect class="blue-border" x="9" y="9" width="662" height="142" rx="4"/>
+<text font-family="Georgia,serif" font-size="14" fill="#c8a84b" x="18" y="88" opacity="0.6">❄</text>
+<text font-family="Georgia,serif" font-size="14" fill="#c8a84b" x="652" y="88" opacity="0.6">❄</text>
+</svg>
+"""
 """
 EQ Auction Tracker — Streamlit Dashboard
 Reads from Supabase. Run with: streamlit run dashboard.py
@@ -12,7 +76,95 @@ from db import (
     search_items, get_item_history, get_item_listings, get_recent_auctions
 )
 
-st.set_page_config(page_title="EQ Auction Tracker", page_icon="💰", layout="wide")
+
+st.set_page_config(page_title="Frostreaver Tunnel", page_icon="⚔️", layout="wide")
+
+st.markdown("""
+<style>
+    /* Main background */
+    .stApp { background-color: #0e0e12; }
+
+    /* Sidebar */
+    [data-testid="stSidebar"] {
+        background-color: #16161e;
+        border-right: 1px solid #c8a84b33;
+    }
+
+    /* Sidebar title */
+    [data-testid="stSidebar"] h1 {
+        color: #c8a84b !important;
+        font-family: serif;
+        font-size: 1.4rem;
+    }
+
+    /* All text */
+    html, body, [class*="css"] { color: #e0d5b0; }
+
+    /* Headers */
+    h1, h2, h3 { color: #c8a84b !important; font-family: serif; }
+
+    /* Metric cards */
+    [data-testid="metric-container"] {
+        background: #1c1c26;
+        border: 1px solid #c8a84b44;
+        border-radius: 8px;
+        padding: 12px;
+    }
+    [data-testid="metric-container"] label { color: #a09060 !important; }
+    [data-testid="metric-container"] [data-testid="stMetricValue"] {
+        color: #c8a84b !important;
+        font-size: 1.6rem !important;
+    }
+
+    /* Dataframe */
+    [data-testid="stDataFrame"] {
+        border: 1px solid #c8a84b33;
+        border-radius: 6px;
+    }
+
+    /* Tabs */
+    .stTabs [data-baseweb="tab-list"] { background: #1c1c26; border-radius: 6px; }
+    .stTabs [data-baseweb="tab"] { color: #a09060; }
+    .stTabs [aria-selected="true"] { color: #c8a84b !important; border-bottom: 2px solid #c8a84b; }
+
+    /* Input boxes */
+    .stTextInput input {
+        background: #1c1c26;
+        border: 1px solid #c8a84b55;
+        color: #e0d5b0;
+        border-radius: 6px;
+    }
+
+    /* Buttons */
+    .stButton button {
+        background: #1c1c26;
+        border: 1px solid #c8a84b;
+        color: #c8a84b;
+        border-radius: 6px;
+    }
+    .stButton button:hover { background: #c8a84b22; }
+
+    /* Radio buttons */
+    .stRadio label { color: #a09060 !important; }
+
+    /* Slider */
+    .stSlider [data-baseweb="slider"] div[role="slider"] { background: #c8a84b; }
+
+    /* Divider */
+    hr { border-color: #c8a84b33; }
+
+    /* Caption */
+    .stCaption { color: #706040 !important; }
+
+    /* Info boxes */
+    .stAlert { background: #1c1c26; border-left: 3px solid #c8a84b; }
+</style>
+""", unsafe_allow_html=True)
+
+# ── Header ────────────────────────────────────────────────────────────────────
+st.markdown(BANNER, unsafe_allow_html=True)
+st.markdown("<div style='margin-bottom:1.5rem'></div>", unsafe_allow_html=True)
+
 
 # Init tables on first load
 try:
@@ -22,8 +174,7 @@ except Exception as e:
     st.stop()
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
-st.sidebar.title("💰 EQ Auction Tracker")
-st.sidebar.caption("Frostreaver Server")
+st.sidebar.markdown("<h1 style="color:#c8a84b;font-family:serif;">⚔️ Frostreaver<br>Tunnel</h1>", unsafe_allow_html=True)
 page = st.sidebar.radio("Navigate", ["📊 Krono Prices", "🔍 Item Lookup", "📜 Recent Auctions"])
 days = st.sidebar.slider("History (days)", 7, 90, 30)
 st.sidebar.markdown("---")
@@ -35,7 +186,11 @@ st.sidebar.caption("Data updates live as the parser runs.")
 # ════════════════════════════════════════════
 
 if page == "📊 Krono Prices":
-    st.title("📊 Krono Price Tracker")
+    col1, col2 = st.columns([0.08, 0.92])
+    with col1:
+        st.image("https://raw.githubusercontent.com/slunas/eq-tracker/main/krono.png", width=40)
+    with col2:
+        st.markdown("<h1 style='color:#c8a84b;font-family:serif;margin:0;padding-top:4px;'>Krono Price Tracker</h1>", unsafe_allow_html=True)
 
     try:
         stats = get_krono_stats()
