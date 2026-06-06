@@ -276,14 +276,14 @@ elif page == "🔍 Item Lookup":
                 with tab1:
                     listings = get_item_listings(selected)
                     if listings:
-                        ldf = pd.DataFrame(listings, columns=['Seller', 'Price (pp) / Krono Avg at Time', 'Price (Krono)', 'Type', 'Time', 'Raw Line'])
-                        ldf['Time'] = pd.to_datetime(ldf['Time']).dt.strftime('%Y-%m-%d %H:%M')
-                        
-                        ldf['Price (Krono)'] = ldf['Price (Krono)'].apply(lambda x: f"{int(x)} kr" if pd.notna(x) else "—")
                         st.caption('💡 pp for Krono listings = Krono avg at time of sale')
-                        ldf['Price (pp) / Krono Avg at Time'] = ldf['Price (pp) / Krono Avg at Time'].apply(lambda x: f"{int(x):,}pp" if pd.notna(x) else "—")
-                        ldf['Price (Krono)'] = ldf['Price (Krono)'].apply(lambda x: f"{int(x)} kr" if pd.notna(x) else "—")
-                        trows = ldf[['Type','Seller','Price (pp) / Krono Avg at Time','Price (Krono)','Time']].values.tolist()
+                        trows = []
+                        for r in listings:
+                            seller, price_pp, price_kr, typ, ts, raw = r
+                            time_str = pd.to_datetime(ts).strftime('%Y-%m-%d %H:%M')
+                            pp_str = f"{int(price_pp):,}pp" if price_pp is not None else "—"
+                            kr_str = f'<img src="https://raw.githubusercontent.com/slunas/eq-tracker/main/krono.png" style="width:18px;height:18px;vertical-align:middle;"> {int(price_kr)}' if price_kr is not None else '—'
+                            trows.append([typ, seller, pp_str, kr_str, time_str])
                         st.markdown(make_html_table(trows, ['Type','Seller','Price (pp)','Price (Krono)','Time']), unsafe_allow_html=True)
                         with st.expander("Show raw auction lines"):
                             for raw in set(r[5] for r in listings[:20]):
@@ -324,7 +324,7 @@ elif page == "📜 Recent Auctions":
         df = pd.DataFrame(rows, columns=['Item', 'Price (pp)', 'Price (Krono)', 'Type', 'Seller', 'Time'])
         df['Time'] = pd.to_datetime(df['Time']).dt.strftime('%Y-%m-%d %H:%M')
         df['Price (pp)'] = df['Price (pp)'].apply(lambda x: f"{int(x):,}pp" if pd.notna(x) else "—")
-        df['Price (Krono)'] = df['Price (Krono)'].apply(lambda x: f"{int(x)} 🪙" if pd.notna(x) else "—")
+        df['Price (Krono)'] = df['Price (Krono)'].apply(lambda x: f'<img src="https://raw.githubusercontent.com/slunas/eq-tracker/main/krono.png" style="width:18px;height:18px;vertical-align:middle;"> {int(x)}' if pd.notna(x) else '—')
         type_filter = st.radio("Show", ["All", "WTS only", "WTB only"], horizontal=True)
         if type_filter == "WTS only":
             df = df[df['Type'] == 'WTS']
