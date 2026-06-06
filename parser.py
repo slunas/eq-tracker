@@ -62,13 +62,19 @@ def is_krono(word):
 def get_seller(line):
     """Extract seller name from EQ log line."""
     m = re.search(r'\] ([A-Za-z][A-Za-z0-9]{1,20}) auctions,', line, re.IGNORECASE)
-    return m.group(1) if m else None
+    name = m.group(1) if m else None
+    if name and name.lower() == "you":
+        name = "Braece"
+    return name
 
 
 def get_message(line):
     """Extract auction message from quotes."""
     m = re.search(r"'(.+?)'", line)
-    return m.group(1) if m else None
+    name = m.group(1) if m else None
+    if name and name.lower() == "you":
+        name = "Braece"
+    return name
 
 
 # ─────────────────────────────────────────────
